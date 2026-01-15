@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hurtownia Panel - Etap 4</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="login-screen" class="auth-container">
+    <div class="card login-card">
+        <h2>🔐 Logowanie</h2>
+        <div class="input-group">
+            <input type="text" id="login-user" placeholder="Użytkownik (np. admin)">
+            <input type="password" id="login-pass" placeholder="Hasło (np. admin123)">
+        </div>
+        <button onclick="handleLogin()">Zaloguj się</button>
+        <p style="font-size: 0.8rem; color: #64748b; margin-top: 15px;">
+            Test: admin/admin123, kierownik/kierownik123, klient/klient123
+        </p>
+    </div>
+</div>
+
+<div id="main-app" class="hidden">
+    <header>
+        <div class="logo">🚀 Hurtownia System</div>
+        <div class="user-info">
+            Rola: <b id="display-role"></b> | ID: <span id="display-id"></span>
+            <button class="btn-logout" onclick="location.reload()">Wyloguj</button>
+        </div>
+    </header>
+    <nav id="nav-bar"></nav>
+    <main id="app-content"></main>
+</div>
+
+<div id="toast" class="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>

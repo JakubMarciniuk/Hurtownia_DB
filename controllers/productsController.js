@@ -1,102 +1,66 @@
-// controllers/productsController.js
 const db = require('../config/db');
 
-// --- Tworzenie Produktu (INSERT) ---
+// Pobieranie wszystkich produktów
+async function getAllProducts(req, res) {
+    try {
+        const result = await db.query('SELECT * FROM Products ORDER BY Name ASC');
+        res.status(200).json(result.rows);
+    } catch (error) {
+        console.error('Błąd getAllProducts:', error);
+        res.status(500).json({ error: 'Błąd pobierania produktów' });
+    }
+}
+
 async function createProduct(req, res) {
     const { name, price, stock } = req.body;
     try {
-        if (!name || typeof price !== 'number' || typeof stock !== 'number' || price <= 0 || stock < 0) {
-            return res.status(400).json({ message: 'Brakuje wymaganych pól lub dane są nieprawidłowe (cena > 0, stock >= 0).' });
-        }
-
         const result = await db.query(
             'INSERT INTO Products (Name, Price, Stock) VALUES ($1, $2, $3) RETURNING ID',
             [name, price, stock]
         );
-        res.status(201).json({ id: result.rows[0].id, message: 'Produkt dodany pomyślnie.' });
+        res.status(201).json({ id: result.rows[0].id, message: 'Produkt dodany.' });
     } catch (error) {
-        console.error('Błąd tworzenia produktu:', error);
-        res.status(500).json({ error: 'Wewnętrzny błąd serwera.' });
+        res.status(500).json({ error: 'Błąd tworzenia produktu.' });
     }
 }
 
-// --- T2: Usuwanie Produktu (DELETE) ---
-// Logika uwzględnia niestandardową regułę integralności (TRIGGER SQL).
 async function deleteProduct(req, res) {
     const productId = req.params.id;
     try {
-        const result = await db.query('DELETE FROM Products WHERE ID = $1', [productId]);
-
-        if (result.rowCount === 0) {
-            return res.status(404).json({ message: 'Produkt nie znaleziony.' });
-        }
-        return res.status(200).json({ message: 'Produkt usunięty pomyślnie.' });
-
+        await db.query('DELETE FROM Products WHERE ID = $1', [productId]);
+        res.status(200).json({ message: 'Produkt usunięty.' });
     } catch (error) {
-        // Obsługa błędu rzuconego przez trigger SQL (NF01)
-        if (error.message.includes('aktywnych zamówień')) {
-            return res.status(400).json({
-                success: false,
-                message: error.message
-            });
+        if (error.message && error.message.includes('aktywnych zamówień')) {
+            return res.status(400).json({ error: error.message });
         }
-
-        console.error('Błąd usuwania produktu (T2):', error);
-        return res.status(500).json({ message: 'Wewnętrzny błąd serwera.' });
+        res.status(500).json({ error: 'Produkt występuje w zamówieniach.\n Brak możliwości usunięcia.' });
     }
 }
 
-// --- T2: Aktualizacja stanu magazynowego (UPDATE Stock) ---
 async function updateStock(req, res) {
-    const productId = req.params.id;
     const { stock } = req.body;
-
-    if (typeof stock !== 'number' || stock < 0) {
-        return res.status(400).json({ message: 'Wymagana jest prawidłowa wartość stanu magazynowego (>= 0).' });
-    }
-
     try {
-        const result = await db.query(
-            'UPDATE Products SET Stock = $1 WHERE ID = $2 RETURNING ID',
-            [stock, productId]
-        );
-        if (result.rowCount === 0) {
-            return res.status(404).json({ message: 'Produkt nie znaleziony.' });
-        }
-        res.status(200).json({ message: 'Stan magazynowy zaktualizowany.' });
+        await db.query('UPDATE Products SET Stock = $1 WHERE ID = $2', [stock, req.params.id]);
+        res.status(200).json({ message: 'Stan zaktualizowany.' });
     } catch (error) {
-        console.error('Błąd aktualizacji stanu magazynowego:', error);
-        res.status(500).json({ error: 'Wewnętrzny błąd serwera.' });
+        res.status(500).json({ error: 'Błąd aktualizacji stanu.' });
     }
 }
 
-// --- T2: Aktualizacja ceny (UPDATE Price) ---
 async function updatePrice(req, res) {
-    const productId = req.params.id;
     const { price } = req.body;
-
-    if (typeof price !== 'number' || price <= 0) {
-        return res.status(400).json({ message: 'Wymagana jest prawidłowa cena (> 0).' });
-    }
-
     try {
-        const result = await db.query(
-            'UPDATE Products SET Price = $1 WHERE ID = $2 RETURNING ID',
-            [price, productId]
-        );
-        if (result.rowCount === 0) {
-            return res.status(404).json({ message: 'Produkt nie znaleziony.' });
-        }
-        res.status(200).json({ message: 'Cena produktu zaktualizowana.' });
+        await db.query('UPDATE Products SET Price = $1 WHERE ID = $2', [price, req.params.id]);
+        res.status(200).json({ message: 'Cena zaktualizowana.' });
     } catch (error) {
-        console.error('Błąd aktualizacji ceny:', error);
-        res.status(500).json({ error: 'Wewnętrzny błąd serwera.' });
+        res.status(500).json({ error: 'Błąd aktualizacji ceny.' });
     }
 }
 
 module.exports = {
+    getAllProducts,
     createProduct,
     deleteProduct,
     updateStock,
-    updatePrice,
+    updatePrice
 };

@@ -246,9 +246,74 @@ async function removeOrderItem(req, res) {
     }
 }
 
+async function getAllOrders(req, res) {
+    try {
+        // ZMIANA: Zamiast o.OrderDate używamy o.Date
+        // (PostgreSQL często domyślnie nazywa kolumnę 'date' jeśli tak była tworzona)
+        const query = `
+            SELECT
+                o.ID as id,
+                o.Status as status,
+                o.Date as date, 
+                u.Username as username,
+                COALESCE(SUM(op.Quantity * op.UnitPrice), 0) as total_price,
+                COUNT(op.ProductID) as items_count
+            FROM Orders o
+                JOIN Users u ON o.UserID = u.ID
+                LEFT JOIN OrderProduct op ON o.ID = op.OrderID
+            GROUP BY o.ID, o.Date, u.Username
+            ORDER BY o.Date DESC
+        `;
+
+        const result = await db.query(query);
+        res.status(200).json(result.rows);
+    } catch (error) {
+        console.error('Błąd pobierania zamówień:', error);
+        res.status(500).json({ error: 'Błąd serwera przy pobieraniu zamówień.' });
+    }
+}
+
+async function getOrderDetails(req, res) {
+    const { id } = req.params;
+    try {
+        // 1. Pobierz nagłówek zamówienia (tylko jeden wiersz)
+        const orderQuery = await db.query(
+            `SELECT o.ID, o.Status, o.Date, u.Username 
+             FROM Orders o JOIN Users u ON o.UserID = u.ID 
+             WHERE o.ID = $1`,
+            [id]
+        );
+
+        if (orderQuery.rows.length === 0) {
+            return res.status(404).json({ message: 'Nie znaleziono zamówienia' });
+        }
+
+        // 2. Pobierz produkty przypisane do tego zamówienia
+        const itemsQuery = await db.query(
+            `SELECT op.ProductID, p.Name, op.Quantity, op.UnitPrice
+             FROM OrderProduct op 
+             JOIN Products p ON op.ProductID = p.ID 
+             WHERE op.OrderID = $1`,
+            [id]
+        );
+
+        // 3. Zwróć dane w formacie oczekiwanym przez React
+        res.json({
+            order: orderQuery.rows[0], // Obiekt nagłówka
+            items: itemsQuery.rows     // Tablica produktów
+        });
+
+    } catch (err) {
+        console.error('Błąd pobierania szczegółów zamówienia:', err);
+        res.status(500).json({ error: 'Błąd serwera' });
+    }
+}
+
 module.exports = {
     createOrder,
     updateOrderStatus,
     addOrderItem,
     removeOrderItem,
+    getAllOrders,
+    getOrderDetails
 };

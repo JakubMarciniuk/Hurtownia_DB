@@ -2,18 +2,19 @@
 const express = require('express');
 const router = express.Router();
 const reportsController = require('../controllers/reportsController');
-const { authorize } = require('../middleware/authMiddleware'); // Wprowadzamy autoryzację
+const { authorize } = require('../middleware/authMiddleware');
 
-// Wymagane role dla raportów
+// Grupy ról
 const MANAGER_OR_ADMIN = ['Kierownik Sklepu', 'Administrator'];
+const CLIENT_OR_ADMIN = ['Klient', 'Kierownik Sklepu', 'Administrator'];
 
-// Zapytanie 1: Kumulatywna historia zamówień (Tylko dla Kierownika/Admina)
-router.get('/client/:id/history', authorize(MANAGER_OR_ADMIN), reportsController.getClientOrderHistory);
+// 1. Historia zamówień (Dostępna dla Klienta)
+router.get('/history/:id', authorize(CLIENT_OR_ADMIN), reportsController.getClientOrderHistory);
 
-// Zapytanie 2: Produkty z niskim stanem magazynowym (Tylko dla Kierownika/Admina)
+// 2. Niski stan magazynowy (Tylko Manager)
 router.get('/low-stock', authorize(MANAGER_OR_ADMIN), reportsController.getLowStockProducts);
 
-// Zapytanie 3: Szczegóły zamówienia (Tylko dla Kierownika/Admina)
-router.get('/order-details/:id', authorize(MANAGER_OR_ADMIN), reportsController.getOrderDetails);
+// 3. Szczegóły zamówienia
+router.get('/order-details/:id', authorize(CLIENT_OR_ADMIN), reportsController.getOrderDetails);
 
 module.exports = router;

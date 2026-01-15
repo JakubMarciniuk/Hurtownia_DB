@@ -1,49 +1,40 @@
-// server.js
-
 const express = require('express');
 const dotenv = require('dotenv');
-
-// Ładowanie zmiennych środowiskowych ZAWSZE NA POCZĄTKU
-dotenv.config();
-
 const db = require('./config/db');
+
+// Importy tras
 const ordersRoutes = require('./routes/ordersRoutes');
 const usersRoutes = require('./routes/usersRoutes');
-const productsRoutes = require('./routes/productsRoutes'); // Importujemy produkty!
+const productsRoutes = require('./routes/productsRoutes');
 const reportsRoutes = require('./routes/reportsRoutes');
 
+// Konfiguracja
+dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// === KLUCZOWY MIDDLEWARE: Parsowanie JSON ===
+// === MIDDLEWARE (Tylko JSON, bez CORS) ===
 app.use(express.json());
-// ===========================================
 
-// Sprawdzenie połączenia z bazą danych
+// Sprawdzenie bazy
 db.pool.query('SELECT NOW()')
-    .then(res => {
-        console.log('✅ Połączenie z PostgreSQL udane.');
-    })
+    .then(() => console.log('✅ Połączenie z PostgreSQL udane.'))
     .catch(err => {
-        console.error('❌ Błąd połączenia z bazą danych! Sprawdź .env i pgAdmin.');
-        console.error(err.message);
+        console.error('❌ Błąd bazy danych:', err.message);
         process.exit(1);
     });
 
-// Definicja głównych tras API
+// Definicja tras
 app.use('/api/orders', ordersRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/products', productsRoutes);
 app.use('/api/reports', reportsRoutes);
 
-// Dodanie prostej trasy GET dla testu w przeglądarce
+// Testowa trasa
 app.get('/', (req, res) => {
-    res.send('API Hurtowni działa. Użyj Postman do testowania tras /api/orders, /api/users, /api/products.');
+    res.send('API działa. Frontend powinien łączyć się przez Proxy.');
 });
 
-
-// Uruchomienie serwera
 app.listen(PORT, () => {
-    console.log(`🚀 Serwer Express działa na porcie ${PORT}`);
-    console.log(`Aplikacja dostępna pod adresem: http://localhost:${PORT}`);
+    console.log(`🚀 Serwer Backend działa na porcie ${PORT}`);
 });
