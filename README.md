@@ -11,7 +11,7 @@ Aplikacja implementuje architekturę klient-serwer, wykorzystując **REST API** 
 **Backend:**
 * **Node.js** & **Express.js** - Logika serwerowa i routing.
 * **PostgreSQL** - Relacyjna baza danych.
-* **node-postgres (pg)** - Sterownik bazy danych.
+* **node-postgres (pg)** - Biblioteka do komunikacji z bazą.
 * **JWT (JSON Web Token)** - Autoryzacja i zarządzanie sesją bezstanową.
 * **Bcrypt** - Bezpieczne hashowanie haseł.
 
@@ -62,7 +62,7 @@ System wykorzystuje model **RBAC (Role-Based Access Control)**:
 ### Wymagania
 * Node.js (v16+)
 * PostgreSQL
-* npm lub yarn
+* npm (lub kompatybilne)
 
 ### 1. Konfiguracja Bazy Danych
 Utwórz nową bazę danych w PostgreSQL i wykonaj poniższy skrypt SQL, aby utworzyć strukturę tabel:
@@ -146,13 +146,13 @@ Zainstaluj zależności:
 npm install
 ```
 
-Uruchom aplikację React:
+Uruchom Vite:
 
 ```bash
 npm run dev
 ```
 
-Aplikacja dostępna pod adresem: **http://localhost:5173**
+Aplikacja domyślnie dostępna pod adresem: **http://localhost:5173**
 
 ---
 
@@ -198,6 +198,7 @@ Zastosowanie zapytań parametryzowanych (Prepared Statements) chroni aplikację 
 ---
 
 ## Autor
+Jakub Marciniuk, Szymon Flis
 
 Projekt wykonany w ramach zajęć:  
 **Bazy Danych**
